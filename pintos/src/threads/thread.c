@@ -40,8 +40,7 @@ extern void save_and_switch_context(
  of thread.h for details. */
 #define THREAD_MAGIC 0xcd6abf4b
 
-static bool is_priority = true;
-
+static bool is_priority = false;
 
 /* List of processes in THREAD_READY state, that is, processes
  that are ready to run but not actually running. */
@@ -301,7 +300,7 @@ void thread_wait(tid_t tid) {
   for (e = list_begin(&all_list); e != list_end(&all_list); e = list_next(e)) {
     t = list_entry(e, struct thread, allelem);
     if (t->tid == tid) {
-      if(t->status != THREAD_DYING){
+      if (t->status != THREAD_DYING) {
         list_push_back(&t->wait_list, &thread_current()->elem);
         thread_block();
       }
@@ -423,9 +422,9 @@ static void schedule() {
   struct thread *cur = thread_get_running_thread();
   struct thread *next;
   if (is_priority) {
-    next = thread_get_next_priority_thread_to_run ();
+    next = thread_get_next_priority_thread_to_run();
   } else {
-    next = thread_get_next_thread_to_run ();
+    next = thread_get_next_thread_to_run();
   }
   ASSERT(interrupts_get_level() == INTERRUPTS_OFF);
   ASSERT(cur->status != THREAD_RUNNING);
@@ -553,7 +552,6 @@ int thread_get_recent_cpu(void) {
   /* Not yet implemented. */
   return 0;
 }
-
 
 /* Idle thread. Executes when no other thread is ready to run.
 
@@ -716,4 +714,11 @@ static void set_current_interrupts_stack_frame(
 static struct interrupts_stack_frame *get_current_interrupts_stack_frame() {
   ASSERT(current_stack_frame != NULL)
   return current_stack_frame;
+}
+
+void disable_priority(void) {
+  is_priority = false;
+}
+void enable_priority(void) {
+  is_priority = true;
 }

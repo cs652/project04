@@ -102,13 +102,29 @@ void init() {
 }
 
 static void dummy_thread(void *aux) {
-//  while (1) {
-//
-//  }
 }
 
 static void test_my_ass(void *aux) {
   //Your code goes here
+}
+
+static void run_func(void *aux) {
+    char *fname = aux;
+    if(fname[4] == 't' && fname[5] == 'w' && fname[6] == 'a' && fname[7] == 'i' && fname[8] == 't'){
+          if(fname[10] == '-' && fname[11] == 'p'){
+            printf("\n I'm Good--------------------\n");
+            enable_priority();
+          }else if(fname[10] == '-' && fname[11] == 'n' && fname[11] == 'p'){
+            disable_priority();
+          }else{
+            printf("\n Unknown Priority Mode!!! \n ");
+          }
+          tid_t wthread = thread_create("Welcome", PRI_MAX, &wait_pizza_test, NULL);
+          thread_wait(wthread);
+          disable_priority();
+    }else{
+      printf("\n Unknown Function Name!!! \n ");
+    }
 }
 
 static void running_thread_stat(void *aux) {
@@ -140,7 +156,7 @@ static void help(void *aux) {
 
 static void start_shell(void *aux) {
   while (1) {
-    printf("\n#######################(Before)###################\n");
+    printf("\n#######################(Shell)###################\n");
     char buff[20];
     int index = 0;
     char input = uart_getc();
@@ -150,7 +166,6 @@ static void start_shell(void *aux) {
       input = uart_getc();
     }
     buff[index] = '\n';
-    printf("\n######################(After -- %s)####################\n", buff);
 
     tid_t process_to_run;
     if (buff[0] == 't' && buff[1] == 's') {
@@ -158,7 +173,7 @@ static void start_shell(void *aux) {
           &running_thread_stat, NULL);
     } else if (buff[0] == 'r' && buff[1] == 'u' && buff[2] == 'n') {
       process_to_run = thread_create("Run_Function", PRI_MAX,
-          &running_thread_stat, NULL);
+          &run_func, buff);
       thread_wait(process_to_run);
     } else if (buff[0] == 'b') {
       process_to_run = thread_create("Running_Threads", PRI_MAX,
@@ -185,7 +200,7 @@ static void prepare_bread_test(void *aux) {
   printf("\n");
   printf("\nBaking Bread ................\n");
   timer_msleep(1000000);
-  printf("\nBaked Bread................\n");
+  printf("\nBaked Bread (%s)................\n", thread_current()->name);
   printf("\n");
 
 }
