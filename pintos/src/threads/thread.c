@@ -203,6 +203,7 @@ void thread_tick(struct interrupts_stack_frame *stack_frame) {
     idle_ticks++;
   } else {
     kernel_ticks++;
+    t->running_ticks = kernel_ticks;
   }
 
   /* Enforce preemption. */
@@ -390,8 +391,8 @@ void thread_exit(void) {
   }
   //End thread_wait
 
-  printf("\nDying slowly ---------------------------------- %s",
-      thread_current()->name);
+  //printf("\nDying slowly ---------------------------------- %s",
+//      thread_current()->name);
   list_remove(&thread_current()->allelem);
   thread_current()->status = THREAD_DYING;
   schedule();
@@ -553,6 +554,7 @@ int thread_get_recent_cpu(void) {
   return 0;
 }
 
+
 /* Idle thread. Executes when no other thread is ready to run.
 
  The idle thread is initially put on the ready list by thread_start(). It will be scheduled
@@ -627,7 +629,6 @@ bool my_order_function(const struct list_elem *a, const struct list_elem *b,
  */
 static struct thread* thread_get_next_thread_to_run(void) {
   if (list_empty(&ready_list)) {
-    thread_exit();
     return idle_thread;
   } else {
     return list_entry(list_pop_front(&ready_list), struct thread, elem);

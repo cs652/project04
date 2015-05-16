@@ -107,6 +107,8 @@ struct thread {
   /* Share between thread.c and synch.c. */
   struct list_elem elem;        /* List element. */
 
+  uint64_t running_ticks;
+
   /* Owned by thread.c. */
   uint32_t magic;               /* Detects stack overflow. */
 };
@@ -144,5 +146,4 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
-
 #endif /* THREADS_THREAD_H_ */
