@@ -37,6 +37,7 @@ static struct wait_node sync_node;
 static void t_wait(struct wait_node *wn);
 static void t_exit(struct wait_node *wn);
 static void prepare_pizza_test(void *);
+static void start_shell(void *);
 
 /*
  * kernel.c
@@ -77,7 +78,6 @@ void init() {
   /* Initializes the Interrupt System. */
   interrupts_init();
   timer_init();
-
   timer_msleep(5000000);
 
   /* Starts preemptive thread scheduling by enabling interrupts. */
@@ -87,24 +87,34 @@ void init() {
 
   /* Initialize the task_sem to coordinate the main thread with workers */
 
+/*
+  //Start thread_wait
+  tid_t wthread = thread_create("Welcome", PRI_MAX, &wait_pizza_test, NULL);
+  thread_wait(wthread);
+  //End thread_wait
+*/
+
   sema_init(&task_sem, 0);
-
-  thread_create("Welcome", PRI_MAX, &wait_pizza_test, NULL);
-  sema_down(&task_sem);
-
-  lock_init(&sync_node.mutex);
-  cond_init(&sync_node.cv);
-  sync_node.done = false;
-
-  thread_create("Prepare_Pizza ", PRI_MIN, &prepare_pizza_test, NULL);
-  t_wait(&sync_node);
-
-  printf("\nAll done.");
+  tid_t wthread = thread_create("Shell", PRI_MAX, &start_shell, NULL);
+  thread_wait(wthread);
+  printf("\nI'm Fucked!");
   thread_exit();
 }
 
+static void start_shell(void *aux) {
+  printf("\n#######################(Before)###################");
+  char input = uart_getc();
+  while(input != 'q'){
+    printf("%c", input);
+    input = uart_getc();
+  }
+  printf("\n######################(After)####################");
+
+}
+
+
 //Start thread_wait
-static void child_test(void *aux) {
+static void prepare_bread_test(void *aux) {
   printf("\n");
   printf("\nBaking Bread ................\n");
   timer_msleep(1000000);
@@ -115,12 +125,11 @@ static void child_test(void *aux) {
 
 static void cook_pizza_test(void *aux) {
   printf("\n Start Making Pizza ..................\n");
-  tid_t cthread = thread_create("BREAD", PRI_DEFAULT, &child_test, NULL);
-  thread_create("BREAD_LOW", PRI_MIN, &child_test, NULL);
-  thread_create("BREAD_HIGH", PRI_DEFAULT +1, &child_test, NULL);
+  tid_t cthread = thread_create("BREAD", PRI_DEFAULT, &prepare_bread_test, NULL);
+  thread_create("BREAD_LOW", PRI_MIN, &prepare_bread_test, NULL);
+  thread_create("BREAD_HIGH", PRI_DEFAULT +1, &prepare_bread_test, NULL);
 
   printf("\n Prepared Toping .................\n");
-
   printf("\n Waiting for Bread ...................\n");
 
   thread_wait(cthread);
@@ -136,8 +145,9 @@ static void wait_pizza_test(void *aux) {
   printf("\n");
   printf("Hello from OsOS\n");
   tid_t pthread = thread_create("Make_pizza", PRI_MAX, &cook_pizza_test, NULL);
+  thread_wait(pthread);
   printf("\n");
-  sema_up(&task_sem);
+//  sema_up(&task_sem);
 }
 
 
@@ -168,4 +178,3 @@ static void t_exit(struct wait_node *wn) {
   cond_signal(&wn->cv, &wn->mutex);
   lock_release(&wn->mutex);
 }
-
