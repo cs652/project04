@@ -141,11 +141,11 @@ bool my_order_function(const struct list_elem *a, const struct list_elem *b, voi
 
 int thread_get_priority (void);
 void thread_set_priority (int);
-
 int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 void disable_priority(void);
 void enable_priority(void);
+void show_running_thread_status(void);
 #endif /* THREADS_THREAD_H_ */

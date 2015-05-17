@@ -214,8 +214,8 @@ void thread_tick(struct interrupts_stack_frame *stack_frame) {
 
 /* Prints thread statistics. */
 void thread_print_stats(void) {
-  //printf("Thread: %lld idle ticks, %lld kernel ticks, %lld user ticks\n",
-//      idle_ticks, kernel_ticks, user_ticks);
+  printf("Thread: %lld idle ticks, %lld kernel ticks, %lld user ticks\n",
+      idle_ticks, kernel_ticks, user_ticks);
 }
 
 /* Creates a new kernel thread named NAME with the given initial PRIORITY, which executes
@@ -356,7 +356,6 @@ const char * thread_name(void) {
  See the big comment at the top of thread.h for details. */
 struct thread * thread_current(void) {
   struct thread *t = thread_get_running_thread();
-
   /* Make sure T is really a thread.
    If either of these assertions fire, then your thread may
    have overflowed its stack.  Each thread has less than 4 kB
@@ -721,4 +720,17 @@ void disable_priority(void) {
 }
 void enable_priority(void) {
   is_priority = true;
+}
+void show_running_thread_status(){
+  struct list_elem *e;
+  struct thread *t;
+  printf("\n ------( %d )---- \n", list_size(&all_list));
+  printf("\n    Name            Time  \n");
+  for (e = list_begin(&all_list); e != list_end(&all_list); e = list_next(e)) {
+      t = list_entry(e, struct thread, allelem);
+//        if (t->status == THREAD_RUNNING)
+        {
+              printf("%s----------->%d \n", t->name, t->running_ticks);
+      }
+    }
 }

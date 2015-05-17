@@ -12,6 +12,7 @@
 #include "../threads/interrupt.h"
 #include "../threads/thread.h"
 
+
 #define TIMER_PERIODIC_INTERVAL 500000 // Time in miliseconds
 
 struct bcm2835_system_timer_registers {
