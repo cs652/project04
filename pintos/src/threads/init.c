@@ -64,13 +64,15 @@ static void support_non_busy_test(void *param) {
 static void busy_test(void *param) {
   printf("\n \n-----------I'm Busy Sleep. Please Wait--------------------\n\n");
   timer_msleep(3000000);
-  printf("\n\n-------------------I'm Awake, I'm Greedy--------------------\n\n");
+  printf(
+      "\n\n-------------------I'm Awake, I'm Greedy--------------------\n\n");
 }
 
 static void non_busy_test(void *param) {
   printf("\n \n-----------I'm Non Busy Sleep.--------------------\n\n");
   my_timer_msleep(3000000);
-  printf("\n\n-----------Non Busy Sleep, I'm NOT greedy--------------------\n\n");
+  printf(
+      "\n\n-----------Non Busy Sleep, I'm NOT greedy--------------------\n\n");
 }
 /* Initializes the Operating System. The interruptions have to be disabled at entrance.
  *
@@ -156,10 +158,6 @@ static void dummy_thread(void *aux) {
   }
 }
 
-static void test_my_ass(void *aux) {
-  //Your code goes here
-}
-
 void setPriority(char* fname, int start_index) {
   if (fname[start_index] == '-' && fname[start_index + 1] == 'p') {
     enable_priority();
@@ -200,10 +198,11 @@ static void run_func(void *aux) {
   } else if (fname[start_index] == 'n' && fname[start_index + 1] == 'b'
       && fname[start_index + 2] == 's' && fname[start_index + 3] == 'y') {
     tid_t wthread = thread_create("function", PRI_MAX, &non_busy_test, NULL);
-    thread_create("function", PRI_MAX, &support_non_busy_test, NULL);
+    tid_t nbsy = thread_create("function", PRI_MAX, &support_non_busy_test, NULL);
     setPriority(fname, 10);
     if (is_run) {
       thread_wait(wthread);
+      thread_wait(nbsy);
     }
   } else if (fname[start_index] == 'b' && fname[start_index + 1] == 'u'
       && fname[start_index + 2] == 's' && fname[start_index + 3] == 'y') {
@@ -240,84 +239,78 @@ static void help(void *aux) {
 
 static void start_shell(void *aux) {
 //<<<<<<< HEAD
-//  printf("\n#######################(Shell)###################\n");
-//  help(NULL);
-//  printf("\n#######################(Shell)###################\n");
-//  while (1) {
-//    printf("\nOsos$: ");
-//
-//    char buff[20];
-//    buff[10] = '-';
-//    buff[11] = 'n';
-//    buff[11] = 'p';
-//
-//    int index = 0;
-//    char input = uart_getc();
-//    while (index < 19 && input != 'q') {
-//      printf("%c", input);
-//      buff[index++] = input;
-//      input = uart_getc();
-//    }
-//    buff[index] = '\n';
-//
-//    tid_t process_to_run;
-//    if (buff[0] == 't' && buff[1] == 's') {
-//      process_to_run = thread_create("Running_Threads", PRI_MAX,
-//          &running_thread_stat, NULL);
-//      thread_wait(process_to_run);
-//    } else if (buff[0] == 'r' && buff[1] == 'u' && buff[2] == 'n') {
-//      process_to_run = thread_create("Run_Function", PRI_MAX, &run_func, buff);
-//      thread_wait(process_to_run);
-//    } else if (buff[0] == 'b' && buff[1] == 'g') {
-//      process_to_run = thread_create("Bg_Function", PRI_MAX, &run_func, buff);
-//    } else if (buff[0] == 'h' && buff[1] == 'e' && buff[2] == 'l'
-//        && buff[3] == 'p') {
-//      process_to_run = thread_create("Help", PRI_MAX, &help, NULL);
-//
-//    } else if (buff[0] == 'e' && buff[1] == 'x' && buff[2] == 'i'
-//        && buff[3] == 't') {
-//      break;
-//    } else if (buff[0] == 'a' && buff[1] == 's' && buff[2] == 's') {
-//      process_to_run = thread_create("test_my_ass", PRI_MAX, &test_my_ass,
-//      NULL);
-//
-//    } else {
-//
-//      printf("\n \n !!!!!!!!( Invalid Input )!!!!!!!! \n");
-//      start_shell(NULL);
-//=======
-    printf("\n#######################(Shell)###################\n");
-    help(NULL);
-    printf("\n#######################(Shell)###################\n");
-    char input;
-    while (1) {
-        printf("\nOsos$: ");
+  printf("\n#######################(Shell)###################\n");
+  help(NULL);
+  printf("\n#######################(Shell)###################\n");
+  while (1) {
+    printf("\nOsos$: ");
 
-        char buff[COMMAND_BUFFER_SIZE];
-        int index = 0;
-        while (index < COMMAND_BUFFER_SIZE && ('\r'!= (input = uart_getc()))) {
-            uart_putc(input);
-            buff[index++] = input;
-        }
-        buff[index] = '\0';
+    char buff[20];
+    buff[10] = '-';
+    buff[11] = 'n';
+    buff[11] = 'p';
 
-        tid_t process_to_run;
-        if (!strcmp(buff, "ts")){
-            process_to_run = thread_create("Running_Threads", PRI_MAX,
-                    &running_thread_stat, NULL);
-        }else if (!strcmp(buff, "run")){
-            process_to_run = thread_create("Run_Function", PRI_MAX, &run_func, buff);
-            thread_wait(process_to_run);
-        }else if (!strcmp(buff, "bg")){
-            process_to_run = thread_create("Bg_Function", PRI_MAX, &run_func, buff);
-        }else if (!strcmp(buff, "help")){
-            process_to_run = thread_create("Help", PRI_MAX, &help, NULL);
-        }else if (!strcmp(buff, "exit")){
-            break;
-        }else{
-            printf("\n \n !!!!!!!!( Invalid Input )!!!!!!!! \n");
-        }
-//>>>>>>> 3f8fdf70b9c19cc6393a6f53f85d9aba12d3f991
+    int index = 0;
+    char input = uart_getc();
+    while (index < 19 && input != 'q') {
+      printf("%c", input);
+      buff[index++] = input;
+      input = uart_getc();
+    }
+    buff[index] = '\n';
+
+    tid_t process_to_run;
+    if (buff[0] == 't' && buff[1] == 's') {
+      process_to_run = thread_create("Running_Threads", PRI_MAX,
+          &running_thread_stat, NULL);
+      thread_wait(process_to_run);
+    } else if (buff[0] == 'r' && buff[1] == 'u' && buff[2] == 'n') {
+      process_to_run = thread_create("Run_Function", PRI_MAX, &run_func, buff);
+      thread_wait(process_to_run);
+    } else if (buff[0] == 'b' && buff[1] == 'g') {
+      process_to_run = thread_create("Bg_Function", PRI_MAX, &run_func, buff);
+    } else if (buff[0] == 'h' && buff[1] == 'e' && buff[2] == 'l'
+        && buff[3] == 'p') {
+      start_shell(NULL);
+    } else if (buff[0] == 'e' && buff[1] == 'x' && buff[2] == 'i'
+        && buff[3] == 't') {
+      break;
+    } else {
+
+      printf("\n \n !!!!!!!!( Invalid Input )!!!!!!!! \n\n");
+      start_shell(NULL);
+//    printf("\n#######################(Shell)###################\n");
+//    help(NULL);
+//    printf("\n#######################(Shell)###################\n");
+//    char input;
+//    while (1) {
+//        printf("\nOsos$: ");
+//
+//        char buff[COMMAND_BUFFER_SIZE];
+//        int index = 0;
+//        while (index < COMMAND_BUFFER_SIZE && ('\r'!= (input = uart_getc()))) {
+//            uart_putc(input);
+//            buff[index++] = input;
+//        }
+//        buff[index] = '\0';
+//
+//        tid_t process_to_run;
+//        if (!strncmp(buff, "ts", 2)){
+//            process_to_run = thread_create("Running_Threads", PRI_MAX,
+//                    &running_thread_stat, NULL);
+//        }else if (!strncmp(buff, "run", 3)){
+//            process_to_run = thread_create("Run_Function", PRI_MAX, &run_func, buff);
+//            thread_wait(process_to_run);
+//        }else if (!strncmp(buff, "bg" ,2)){
+//            process_to_run = thread_create("Bg_Function", PRI_MAX, &run_func, buff);
+//        }else if (!strncmp(buff, "help",4)){
+//            process_to_run = thread_create("Help", PRI_MAX, &help, NULL);
+//        }else if (!strncmp(buff, "exit", 4)){
+//            break;
+//        }else{
+//            printf("\n \n !!!!!!!!( Invalid Input )!!!!!!!! \n");
+////        }
+////>>>>>>> 3f8fdf70b9c19cc6393a6f53f85d9aba12d3f991
     }
 
     printf("\nOsos$: ");
@@ -326,7 +319,7 @@ static void start_shell(void *aux) {
 //Start thread_wait
 static void prepare_bread_test(void *aux) {
   printf("\n");
-  printf("\nBaking Bread ................\n");
+  printf("\nBaking Bread ..(%s)..............\n", thread_current()->name);
   timer_msleep(1000000);
   printf("\nBaked Bread (%s)................\n", thread_current()->name);
   printf("\n");
