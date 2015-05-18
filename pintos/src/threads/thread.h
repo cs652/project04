@@ -148,4 +148,6 @@ int thread_get_load_avg (void);
 void disable_priority(void);
 void enable_priority(void);
 void show_running_thread_status(void);
+void set_current_interrupts_stack_frame(struct interrupts_stack_frame *stack_frame);
+struct list *get_all_list(void);
 #endif /* THREADS_THREAD_H_ */
