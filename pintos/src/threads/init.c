@@ -18,6 +18,8 @@
 #include "thread.h"
 #include "vaddr.h"
 
+#define COMMAND_BUFFER_SIZE 128
+
 /* -ul: Maximum number of pages to put into palloc's user pool. */
 static size_t user_page_limit = SIZE_MAX;
 
@@ -206,50 +208,34 @@ static void start_shell(void *aux) {
     printf("\n#######################(Shell)###################\n");
     help(NULL);
     printf("\n#######################(Shell)###################\n");
+    char input;
     while (1) {
         printf("\nOsos$: ");
 
-        char buff[20];
-        buff[10] = '-';
-        buff[11] = 'n';
-        buff[11] = 'p';
-
+        char buff[COMMAND_BUFFER_SIZE];
         int index = 0;
-        char input = uart_getc();
-        while (index < 19 && input != 'q') {
-            printf("%c", input);
+        while (index < COMMAND_BUFFER_SIZE && ('\r'!= (input = uart_getc()))) {
+            uart_putc(input);
             buff[index++] = input;
-            input = uart_getc();
         }
-        buff[index] = '\n';
+        buff[index] = '\0';
 
         tid_t process_to_run;
-        if (buff[0] == 't' && buff[1] == 's') {
+        if (!strcmp(buff, "ts")){
             process_to_run = thread_create("Running_Threads", PRI_MAX,
                     &running_thread_stat, NULL);
-        } else if (buff[0] == 'r' && buff[1] == 'u' && buff[2] == 'n') {
+        }else if (!strcmp(buff, "run")){
             process_to_run = thread_create("Run_Function", PRI_MAX, &run_func, buff);
             thread_wait(process_to_run);
-        } else if (buff[0] == 'b' && buff[1] == 'g') {
+        }else if (!strcmp(buff, "bg")){
             process_to_run = thread_create("Bg_Function", PRI_MAX, &run_func, buff);
-        } else if (buff[0] == 'h' && buff[1] == 'e' && buff[2] == 'l'
-                && buff[3] == 'p') {
+        }else if (!strcmp(buff, "help")){
             process_to_run = thread_create("Help", PRI_MAX, &help, NULL);
-
-        } else if (buff[0] == 'e' && buff[1] == 'x' && buff[2] == 'i'
-                && buff[3] == 't') {
+        }else if (!strcmp(buff, "exit")){
             break;
-        } else if (buff[0] == 'a' && buff[1] == 's' && buff[2] == 's') {
-            process_to_run = thread_create("test_my_ass", PRI_MAX, &test_my_ass,
-                    NULL);
-
-        } else {
-
+        }else{
             printf("\n \n !!!!!!!!( Invalid Input )!!!!!!!! \n");
-            start_shell(NULL);
         }
-
-        printf("\nOsos$: ");
     }
 }
 //Start thread_wait
