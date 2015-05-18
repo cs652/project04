@@ -18,6 +18,8 @@
 #include "thread.h"
 #include "vaddr.h"
 
+#define COMMAND_BUFFER_SIZE 128
+
 /* -ul: Maximum number of pages to put into palloc's user pool. */
 static size_t user_page_limit = SIZE_MAX;
 
@@ -237,51 +239,85 @@ static void help(void *aux) {
 }
 
 static void start_shell(void *aux) {
-  printf("\n#######################(Shell)###################\n");
-  help(NULL);
-  printf("\n#######################(Shell)###################\n");
-  while (1) {
-    printf("\nOsos$: ");
+//<<<<<<< HEAD
+//  printf("\n#######################(Shell)###################\n");
+//  help(NULL);
+//  printf("\n#######################(Shell)###################\n");
+//  while (1) {
+//    printf("\nOsos$: ");
+//
+//    char buff[20];
+//    buff[10] = '-';
+//    buff[11] = 'n';
+//    buff[11] = 'p';
+//
+//    int index = 0;
+//    char input = uart_getc();
+//    while (index < 19 && input != 'q') {
+//      printf("%c", input);
+//      buff[index++] = input;
+//      input = uart_getc();
+//    }
+//    buff[index] = '\n';
+//
+//    tid_t process_to_run;
+//    if (buff[0] == 't' && buff[1] == 's') {
+//      process_to_run = thread_create("Running_Threads", PRI_MAX,
+//          &running_thread_stat, NULL);
+//      thread_wait(process_to_run);
+//    } else if (buff[0] == 'r' && buff[1] == 'u' && buff[2] == 'n') {
+//      process_to_run = thread_create("Run_Function", PRI_MAX, &run_func, buff);
+//      thread_wait(process_to_run);
+//    } else if (buff[0] == 'b' && buff[1] == 'g') {
+//      process_to_run = thread_create("Bg_Function", PRI_MAX, &run_func, buff);
+//    } else if (buff[0] == 'h' && buff[1] == 'e' && buff[2] == 'l'
+//        && buff[3] == 'p') {
+//      process_to_run = thread_create("Help", PRI_MAX, &help, NULL);
+//
+//    } else if (buff[0] == 'e' && buff[1] == 'x' && buff[2] == 'i'
+//        && buff[3] == 't') {
+//      break;
+//    } else if (buff[0] == 'a' && buff[1] == 's' && buff[2] == 's') {
+//      process_to_run = thread_create("test_my_ass", PRI_MAX, &test_my_ass,
+//      NULL);
+//
+//    } else {
+//
+//      printf("\n \n !!!!!!!!( Invalid Input )!!!!!!!! \n");
+//      start_shell(NULL);
+//=======
+    printf("\n#######################(Shell)###################\n");
+    help(NULL);
+    printf("\n#######################(Shell)###################\n");
+    char input;
+    while (1) {
+        printf("\nOsos$: ");
 
-    char buff[20];
-    buff[10] = '-';
-    buff[11] = 'n';
-    buff[11] = 'p';
+        char buff[COMMAND_BUFFER_SIZE];
+        int index = 0;
+        while (index < COMMAND_BUFFER_SIZE && ('\r'!= (input = uart_getc()))) {
+            uart_putc(input);
+            buff[index++] = input;
+        }
+        buff[index] = '\0';
 
-    int index = 0;
-    char input = uart_getc();
-    while (index < 19 && input != 'q') {
-      printf("%c", input);
-      buff[index++] = input;
-      input = uart_getc();
-    }
-    buff[index] = '\n';
-
-    tid_t process_to_run;
-    if (buff[0] == 't' && buff[1] == 's') {
-      process_to_run = thread_create("Running_Threads", PRI_MAX,
-          &running_thread_stat, NULL);
-      thread_wait(process_to_run);
-    } else if (buff[0] == 'r' && buff[1] == 'u' && buff[2] == 'n') {
-      process_to_run = thread_create("Run_Function", PRI_MAX, &run_func, buff);
-      thread_wait(process_to_run);
-    } else if (buff[0] == 'b' && buff[1] == 'g') {
-      process_to_run = thread_create("Bg_Function", PRI_MAX, &run_func, buff);
-    } else if (buff[0] == 'h' && buff[1] == 'e' && buff[2] == 'l'
-        && buff[3] == 'p') {
-      process_to_run = thread_create("Help", PRI_MAX, &help, NULL);
-
-    } else if (buff[0] == 'e' && buff[1] == 'x' && buff[2] == 'i'
-        && buff[3] == 't') {
-      break;
-    } else if (buff[0] == 'a' && buff[1] == 's' && buff[2] == 's') {
-      process_to_run = thread_create("test_my_ass", PRI_MAX, &test_my_ass,
-      NULL);
-
-    } else {
-
-      printf("\n \n !!!!!!!!( Invalid Input )!!!!!!!! \n");
-      start_shell(NULL);
+        tid_t process_to_run;
+        if (!strcmp(buff, "ts")){
+            process_to_run = thread_create("Running_Threads", PRI_MAX,
+                    &running_thread_stat, NULL);
+        }else if (!strcmp(buff, "run")){
+            process_to_run = thread_create("Run_Function", PRI_MAX, &run_func, buff);
+            thread_wait(process_to_run);
+        }else if (!strcmp(buff, "bg")){
+            process_to_run = thread_create("Bg_Function", PRI_MAX, &run_func, buff);
+        }else if (!strcmp(buff, "help")){
+            process_to_run = thread_create("Help", PRI_MAX, &help, NULL);
+        }else if (!strcmp(buff, "exit")){
+            break;
+        }else{
+            printf("\n \n !!!!!!!!( Invalid Input )!!!!!!!! \n");
+        }
+//>>>>>>> 3f8fdf70b9c19cc6393a6f53f85d9aba12d3f991
     }
 
     printf("\nOsos$: ");

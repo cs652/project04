@@ -181,7 +181,7 @@ static void keyboard_irq_handler(struct interrupts_stack_frame *stack_frame) {
     struct list *all_list = get_all_list();
     for (e = list_begin(all_list); e != list_end(all_list); e = list_next(e)) {
         t = list_entry(e, struct thread, allelem);
-        if (!strcmp(t->name, "Shell")) {
+        if ((!strcmp(t->name, "Shell"))&&(t->status==THREAD_BLOCKED)) {
             thread_unblock(t);
         }
     }
