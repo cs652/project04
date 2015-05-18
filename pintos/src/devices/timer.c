@@ -11,23 +11,23 @@
 #include "bcm2835.h"
 #include "../threads/interrupt.h"
 #include "../threads/thread.h"
-
+#include "../threads/synch.h"
 
 #define TIMER_PERIODIC_INTERVAL 500000 // Time in miliseconds
 
 struct bcm2835_system_timer_registers {
-  volatile unsigned int CS;  /** System Timer Control/Status */
+  volatile unsigned int CS; /** System Timer Control/Status */
   volatile unsigned int CLO; /** System Timer Counter Lower 32 bits */
   volatile unsigned int CHI; /** System Timer Counter Higher 32 bits */
-  volatile unsigned int C0;  /** System Timer Compare 0.  DO NOT USE; is used by GPU.  */
-  volatile unsigned int C1;  /** System Timer Compare 1 */
-  volatile unsigned int C2;  /** System Timer Compare 2.  DO NOT USE; is used by GPU.  */
-  volatile unsigned int C3;  /** System Timer Compare 3 */
+  volatile unsigned int C0; /** System Timer Compare 0.  DO NOT USE; is used by GPU.  */
+  volatile unsigned int C1; /** System Timer Compare 1 */
+  volatile unsigned int C2; /** System Timer Compare 2.  DO NOT USE; is used by GPU.  */
+  volatile unsigned int C3; /** System Timer Compare 3 */
 };
 
 /* Pointer to the timer registers. */
 static volatile struct bcm2835_system_timer_registers * const timer_registers =
-        (volatile struct bcm2835_system_timer_registers*) SYSTEM_TIMER_REGISTERS_BASE;
+    (volatile struct bcm2835_system_timer_registers*) SYSTEM_TIMER_REGISTERS_BASE;
 
 /* Timer interrupt handler. */
 static void timer_irq_handler(struct interrupts_stack_frame *stack_frame);
@@ -38,8 +38,11 @@ static void timer_reset_timer_compare(int timer_compare);
 /* Sets the periodic interval of the timer. */
 static void timer_set_interval(int timer_compare, int milliseconds);
 
+static struct semaphore sleep_sema;
+
 void timer_init() {
   printf("\nInitializing timer.....");
+  sema_init(&sleep_sema, 0);
   interrupts_register_irq(IRQ_1, timer_irq_handler, "Timer Interrupt");
   timer_set_interval(IRQ_1, TIMER_PERIODIC_INTERVAL);
 }
@@ -50,7 +53,6 @@ int timer_get_timestamp() {
   //unsigned long long timestamp = timer_registers->CHI;
   // Shifting the higher part to the right and accomodating the lower part from the 0 bit to 31.
   //timestamp = (timestamp << 32) | timer_registers->CLO;
-
   return timer_registers->CLO;
 }
 
@@ -60,7 +62,17 @@ void timer_msleep(int milliseconds) {
   int startTime = timer_get_timestamp();
   int elapseTime = timer_get_timestamp() - startTime;
   while (milliseconds > elapseTime) {
-      elapseTime = timer_get_timestamp() - startTime;
+    elapseTime = timer_get_timestamp() - startTime;
+  }
+}
+
+void my_timer_msleep(int milliseconds) {
+  // Implements busy waiting
+  int startTime = timer_get_timestamp();
+  int elapseTime = timer_get_timestamp() - startTime;
+  while (milliseconds > elapseTime) {
+    sema_down(&sleep_sema);
+    elapseTime = timer_get_timestamp() - startTime;
   }
 }
 
@@ -72,8 +84,8 @@ void timer_msleep(int milliseconds) {
  */
 static void timer_reset_timer_compare(int timer_compare) {
   // There are only four system timer compares (0-3).
-  if (timer_compare > 3 || timer_compare <0) {
-      return;
+  if (timer_compare > 3 || timer_compare < 0) {
+    return;
   }
 
   timer_registers->CS = timer_registers->CS | (1 << timer_compare);
@@ -85,7 +97,7 @@ static void timer_reset_timer_compare(int timer_compare) {
  */
 static void timer_irq_handler(struct interrupts_stack_frame *stack_frame) {
 //  printf("\nKernel - Timer Interrupt Handler.");
-
+  sema_up(&sleep_sema);
   // The System Timer compare has to be reseted after the timer interrupt.
   timer_reset_timer_compare(IRQ_1);
 
@@ -106,8 +118,8 @@ static void timer_set_interval(int timer_compare, int milliseconds) {
   int interval = timer_registers->CLO + milliseconds;
   // The System Timer Compares that are enabled are 1 and 3.
   if (timer_compare == 1) {
-      timer_registers->C1 = interval;
+    timer_registers->C1 = interval;
   } else if (timer_compare == 3) {
-      timer_registers->C3 = interval;
+    timer_registers->C3 = interval;
   }
 }
