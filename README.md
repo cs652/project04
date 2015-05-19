@@ -50,3 +50,12 @@ Priority scheduling:
 		2. implemented thread_get_next_priority_thread_to_run() to get the next thread to run based on priority
 		3. sorted the priority list based on the thread priority value and returned the first thread in the list.
 
+Non Busy Wait Uart:
+    
+    When other thread is printing we still can type in and see characters displaying in screen.
+
+    Code:
+        1. create a keyboard_init() function set up irq handler for irq 29
+        2. in irq handler keyboard_irq_handler() get the input and store in a buffer
+        3. in irq handler unblock shell thread
+        4. in shell thread if no input then block
