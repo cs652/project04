@@ -71,7 +71,8 @@ void my_timer_msleep(int milliseconds) {
   int startTime = timer_get_timestamp();
   int elapseTime = timer_get_timestamp() - startTime;
   while (milliseconds > elapseTime) {
-    sema_down(&sleep_sema);
+    if (thread_current()->status == THREAD_RUNNING)
+      sema_down(&sleep_sema);
     elapseTime = timer_get_timestamp() - startTime;
   }
 }

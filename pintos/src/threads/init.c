@@ -54,25 +54,19 @@ static void test_swi_interrupt() {
   generate_swi_interrupt(); // Function defined in interrupts.s
 }
 
-static void support_non_busy_test(void *param) {
-  int i = 0;
-  for (; i <= 600; i++) {
-    printf("---%d---", i);
-  }
-}
+//static void support_non_busy_test(void *param) {
+//  int i = 0;
+//  for (; i <= 600; i++) {
+//    printf("---%d---", i);
+//  }
+//}
 
 static void busy_test(void *param) {
-  printf("\n \n-----------I'm Busy Sleep. Please Wait--------------------\n\n");
-  timer_msleep(3000000);
-  printf(
-      "\n\n-------------------I'm Awake, I'm Greedy--------------------\n\n");
+  timer_msleep(9000000);
 }
 
 static void non_busy_test(void *param) {
-  printf("\n \n-----------I'm Non Busy Sleep.--------------------\n\n");
-  my_timer_msleep(3000000);
-  printf(
-      "\n\n-----------Non Busy Sleep, I'm NOT greedy--------------------\n\n");
+  my_timer_msleep(9000000);
 }
 /* Initializes the Operating System. The interruptions have to be disabled at entrance.
  *
@@ -80,6 +74,20 @@ static void non_busy_test(void *param) {
  *  - Sets the periodic timer
  *  - Set the thread functionality
  */
+
+static void dummy_thread(void *aux) {
+  int i = 0;
+  while (i++ < 5000) {
+
+  }
+}
+
+static void running_thread_stat(void *aux) {
+  printf("\n");
+//  thread_create("Dummy_Thread1", PRI_MAX, &dummy_thread, NULL);
+  show_running_thread_status();
+}
+
 void init() {
 
   /* Initializes ourselves as a thread so we can use locks,
@@ -148,13 +156,7 @@ static void fact_func(void *param) {
     ASSERT(fac1 == fac2);
     SetForeColour(green + blue);
     printf("\n%s - Factorial(%d) = %d", thread_current()->name, number, fac1);
-  }
-}
-
-static void dummy_thread(void *aux) {
-  int i = 0;
-  while (i++ < 500000) {
-
+    printf("Osos: $");
   }
 }
 
@@ -183,30 +185,32 @@ static void run_func(void *aux) {
   if (fname[start_index] == 't' && fname[start_index + 1] == 'w'
       && fname[start_index + 2] == 'a' && fname[start_index + 3] == 'i'
       && fname[start_index + 4] == 't') {
-    tid_t wthread = thread_create("function", PRI_MAX, &wait_pizza_test, NULL);
+    tid_t wthread = thread_create("Pizza", PRI_MAX, &wait_pizza_test, NULL);
     setPriority(fname, 10);
     if (is_run) {
       thread_wait(wthread);
     }
   } else if (fname[start_index] == 'f' && fname[start_index + 1] == 'a'
       && fname[start_index + 2] == 'c' && fname[start_index + 3] == 't') {
-    tid_t wthread = thread_create("function", PRI_MAX, &fact_func, NULL);
-    setPriority(fname, 10);
-    if (is_run) {
-      thread_wait(wthread);
-    }
+    tid_t wthread = thread_create("fact_func", PRI_MAX, &fact_func, NULL);
+//    setPriority(fname, 10);
+//    if (is_run) {
+    thread_wait(wthread);
+//    }
   } else if (fname[start_index] == 'n' && fname[start_index + 1] == 'b'
       && fname[start_index + 2] == 's' && fname[start_index + 3] == 'y') {
-    tid_t wthread = thread_create("function", PRI_MAX, &non_busy_test, NULL);
-    tid_t nbsy = thread_create("function", PRI_MAX, &support_non_busy_test, NULL);
+    thread_create("nbsy", PRI_MAX, &non_busy_test, NULL);
+//    timer_msleep(2000000);
+    tid_t wthread = thread_create("Thread_Stats", PRI_MAX, &running_thread_stat, NULL);
     setPriority(fname, 10);
     if (is_run) {
       thread_wait(wthread);
-      thread_wait(nbsy);
     }
   } else if (fname[start_index] == 'b' && fname[start_index + 1] == 'u'
       && fname[start_index + 2] == 's' && fname[start_index + 3] == 'y') {
-    tid_t wthread = thread_create("function", PRI_MAX, &busy_test, NULL);
+    thread_create("busy", PRI_MAX, &busy_test, NULL);
+//    timer_msleep(2000000);
+    tid_t wthread = thread_create("Thread_Stats", PRI_MAX, &running_thread_stat, NULL);
     setPriority(fname, 10);
     if (is_run) {
       thread_wait(wthread);
@@ -219,17 +223,6 @@ static void run_func(void *aux) {
 
 }
 
-static void running_thread_stat(void *aux) {
-  printf("\n");
-
-  thread_create("Dummy_Thread1", PRI_MAX, &dummy_thread, NULL);
-  thread_create("Dummy_Thread2", PRI_MAX, &dummy_thread, NULL);
-  thread_create("Dummy_Thread3", PRI_MAX, &dummy_thread, NULL);
-  show_running_thread_status();
-  printf("Done");
-
-}
-
 static void help(void *aux) {
   printf("\n ts - thread status - show running threads (and their run time)\n");
   printf("\n run <func> - launch a thread function and wait for completion.\n");
@@ -238,7 +231,9 @@ static void help(void *aux) {
 }
 
 static void start_shell(void *aux) {
-//<<<<<<< HEAD
+  unsigned short blue = 0x1f;
+  unsigned short green = 0x7E0;
+  SetForeColour(green);
   printf("\n#######################(Shell)###################\n");
   help(NULL);
   printf("\n#######################(Shell)###################\n");
@@ -259,9 +254,11 @@ static void start_shell(void *aux) {
     }
     buff[index] = '\n';
 
+    SetForeColour(green + blue);
+
     tid_t process_to_run;
     if (buff[0] == 't' && buff[1] == 's') {
-      process_to_run = thread_create("Running_Threads", PRI_MAX,
+      process_to_run = thread_create("Thread_Stats", PRI_MAX,
           &running_thread_stat, NULL);
       thread_wait(process_to_run);
     } else if (buff[0] == 'r' && buff[1] == 'u' && buff[2] == 'n') {
@@ -279,40 +276,8 @@ static void start_shell(void *aux) {
 
       printf("\n \n !!!!!!!!( Invalid Input )!!!!!!!! \n\n");
       start_shell(NULL);
-//    printf("\n#######################(Shell)###################\n");
-//    help(NULL);
-//    printf("\n#######################(Shell)###################\n");
-//    char input;
-//    while (1) {
-//        printf("\nOsos$: ");
-//
-//        char buff[COMMAND_BUFFER_SIZE];
-//        int index = 0;
-//        while (index < COMMAND_BUFFER_SIZE && ('\r'!= (input = uart_getc()))) {
-//            uart_putc(input);
-//            buff[index++] = input;
-//        }
-//        buff[index] = '\0';
-//
-//        tid_t process_to_run;
-//        if (!strncmp(buff, "ts", 2)){
-//            process_to_run = thread_create("Running_Threads", PRI_MAX,
-//                    &running_thread_stat, NULL);
-//        }else if (!strncmp(buff, "run", 3)){
-//            process_to_run = thread_create("Run_Function", PRI_MAX, &run_func, buff);
-//            thread_wait(process_to_run);
-//        }else if (!strncmp(buff, "bg" ,2)){
-//            process_to_run = thread_create("Bg_Function", PRI_MAX, &run_func, buff);
-//        }else if (!strncmp(buff, "help",4)){
-//            process_to_run = thread_create("Help", PRI_MAX, &help, NULL);
-//        }else if (!strncmp(buff, "exit", 4)){
-//            break;
-//        }else{
-//            printf("\n \n !!!!!!!!( Invalid Input )!!!!!!!! \n");
-////        }
-////>>>>>>> 3f8fdf70b9c19cc6393a6f53f85d9aba12d3f991
     }
-
+    SetForeColour(green);
     printf("\nOsos$: ");
   }
 }
